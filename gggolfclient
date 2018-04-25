@@ -2,23 +2,68 @@
 # The command-line interface for secure GGGolf
 # (C) Copyright 2018-2019 Yu-Yueh Liu
 
-"""Secure GG Golf Client
+"""Secure GG Golf Command-Line Interface
 
 Usage:
-  ./gggolfclient [option] <location name>
-  ./gggolfclient -r cerf
+  ./gggolfclient res -d DAY
+  ./gggolfclient setup -n NAME
   ./gggolfclient (-h | --help)
-  ./gggolfclient --version
+  ./gggolfclient (-v | --version)
+
+
+Commands:
+  res             Reserve golf course
+  setup           setup variable
+
 
 Options:
-  -h --help     Show this screen.
-  --version     Show version.
-  -r --reg      Register 
+  -h --help       Show this screen.
+  -v --version    Show version.
+  -n --name=NAME  Golf Course location name.
+  -d --day=DAY    Day of the week.
 
 """
 from docopt import docopt
 
+days=["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+locations=["cerf"]
+global url
 
+def main(docopt_args):
+  
+    # set variables
+    if docopt_args["setup"]:
+      locaiton_name=docopt_args["--name"]
+
+      if locaiton_name not in locations :
+        print "This is not a valid location..."
+      else:
+        url="https://secure.gggolf.ca/"+locaiton_name+"/index.php?option=com_ggmember&req=login&lang=en"
+        print "The setup is DONE! The location you have selected is: "+locaiton_name
+
+
+    # Reservation
+    elif docopt_args["res"]:        
+        res_day=docopt_args["--day"]
+        # Get arguments
+        if res_day not in days:
+          print "This is not a valid day..."
+        else:
+          print "You have chosen to reserve on "+res_day
+
+        # elif docopt_args["--greatflag"]:
+        #     print "   with --greatflag\n"
+        # else:
+        #     print "Not a valid command"
+
+    # For 1 or more repeating arguments with ./gggolfclient <repeating>...
+    # elif docopt_args["<repeating>"]:
+    #     print "You have used the repeating args:"
+    #     print '   ' + '   '.join(docopt_args["<repeating>"]) + ' '
+
+
+# START OF SCRIPT
 if __name__ == '__main__':
-    arguments = docopt(__doc__, version='GGGolf 1.0')
-    print(arguments)
+    args = docopt(__doc__, version='GGGolf 1.0')
+    # print(args)
+    main(args)
