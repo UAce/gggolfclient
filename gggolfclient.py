@@ -5,16 +5,15 @@
 """Secure GG Golf Command-Line Interface
 
 Usage:
-  ./gggolfclient res -d DAY
-  ./gggolfclient setup -n NAME
-  ./gggolfclient (-h | --help)
-  ./gggolfclient (-v | --version)
+  gggolfclient.py res -d DAY
+  gggolfclient.py test
+  gggolfclient.py (-h | --help)
+  gggolfclient.py (-v | --version)
 
 
 Commands:
   res             Reserve golf course
-  setup           setup variable
-
+  test            Testing new function
 
 Options:
   -h --help       Show this screen.
@@ -28,26 +27,22 @@ from gggolf_common import *
 import credentials_info
 
 days=["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
-locations=["cerf"]
-url=""
 
 def main(docopt_args):
-  
-    # set variables
-    if docopt_args["setup"]:
-      locaiton_name=docopt_args["--name"]
+    
+    # # set variables
+    # if docopt_args["setup"]:
+    #   location_name=docopt_args["--name"]
 
-      if locaiton_name not in locations :
-        print "This is not a valid location..."
-      else:
-        global url
-        url="https://secure.gggolf.ca/"+locaiton_name+"/index.php?"
-        print "The setup is DONE! The location you have selected is: "+locaiton_name
-        print url+"\n"
-
+    #   if location_name not in locations :
+    #     print "This is not a valid location..."
+    #   else:
+    #     init("https://secure.gggolf.ca/"+location_name+"/index.php?")
+    #     print "The setup is DONE! The location you have selected is: "+location_name
+    #     print base_url+"\n"
 
     # Reservation
-    elif docopt_args["res"]:        
+    if docopt_args["res"]:        
         res_day=docopt_args["--day"]
         # Get arguments
         if res_day not in days:
@@ -59,14 +54,23 @@ def main(docopt_args):
         #     print "   with --greatflag\n"
         # else:
         #     print "Not a valid command"
-
+    elif docopt_args["test"]:
+        test_func()
     # For 1 or more repeating arguments with ./gggolfclient <repeating>...
     # elif docopt_args["<repeating>"]:
     #     print "You have used the repeating args:"
     #     print '   ' + '   '.join(docopt_args["<repeating>"]) + ' '
 
+
 def reserve_course(day):
   gggolf_login()
+
+
+
+def test_func():
+  index=gggolf_login()
+  tee_times_parse(index.text)
+
 
 
 # START OF SCRIPT
