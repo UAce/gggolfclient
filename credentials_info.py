@@ -3,4 +3,4 @@
 
 username = '11568'
 password = 'chezpopo'
-base_url = 'https://secure.gggolf.ca/cerf/index.php?'
+base_url = 'https://secure.gggolf.ca/cerf/'

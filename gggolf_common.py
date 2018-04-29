@@ -6,7 +6,7 @@
 import credentials_info
 import requests,sys
 import datetime
-from datetime import datetime as dt
+from datetime import datetime, time
 from bs4 import BeautifulSoup
 
 cookie_data = {}
@@ -34,13 +34,55 @@ def gggolf_post(func, req):
 	return r
 
 def gggolf_login():
-	r=gggolf_get("option=com_ggmember&req=login&lang=en")
+	r=gggolf_get("index.php?option=com_ggmember&req=login&lang=en")
 	token=get_token(r.text)
-	print "THE TOKEN is: "+token
-	print "\n\n_________________________________________________________\n\n"
+	print "SECURITY TOKEN: "+token+"\n"
 	
-	r2=gggolf_post("option=com_users&task=user.login&lang=en",{'username': credentials_info.username, 'password': credentials_info.password, 'option': 'com_users', 'task': 'user.login', 'return': 'aHR0cHM6Ly9zZWN1cmUuZ2dnb2xmLmNhL2NlcmYvaW5kZXgucGhwP29wdGlvbj1jb21fZ2dtZW1iZXImcmVxPWluZGV4Jmxhbmc9ZW4mbXNncz1Q', token : '1'})
+	r2=gggolf_post("index.php?option=com_users&task=user.login&lang=en",{'username': credentials_info.username, 'password': credentials_info.password, 'option': 'com_users', 'task': 'user.login', 'return': 'aHR0cHM6Ly9zZWN1cmUuZ2dnb2xmLmNhL2NlcmYvaW5kZXgucGhwP29wdGlvbj1jb21fZ2dtZW1iZXImcmVxPWluZGV4Jmxhbmc9ZW4mbXNncz1Q', token : '1'})
 	return r2
+
+def search_available_slots(func, course_list, atime):
+	r=gggolf_get(func)
+	text = r.text.replace('&nbsp;',' ') # hack to bypass how Python handles unicode
+	html = BeautifulSoup(text,'html.parser')
+
+	# Remove Table headers and keep the table body
+	tr_all=html.table.find_all("tr")[5:]
+	
+	playerColNo=None
+	courseColNo=None
+	after_time=datetime.strptime(atime+":00", '%H:%M').time()
+
+	# Get column number for Player 1 and for Course
+	for th in html.table.select("tr.autogridHeader")[0].find_all("th"):
+		if th.get_text().strip()=="Player 1":
+			playerColNo=int(th['data-colno'])
+		if th.get_text().strip()=="Course":
+			courseColNo=int(th['data-colno'])
+
+	available_time_urls=[]
+	for tr in tr_all:
+		# print tr
+		tr_list=tr.find_all("td")
+		# Skip tee time if unavailable
+		if tr_list[playerColNo].get_text().strip() == "Unavailable" or tr_list[courseColNo].get_text().strip() not in course_list:	
+			continue
+
+		tmp=tr_list[1].get_text().strip()
+		tr_time=datetime.strptime(tmp, '%H:%M').time()
+
+		if tr_time >= after_time:
+			print tr_time, ":", tr_list[2].get_text().strip(), "is available" 
+			available_time_urls.append(tr_list[0].find("a")['href'].strip())
+	if len(available_time_urls) is 0:
+		raise Exception("There are no available courses...")
+	else:
+		return available_time_urls
+
+
+def get_url_action(url):
+	return url.replace("https://secure.gggolf.ca/cerf/", "")	
+
 
 def get_token(text):
 	text = text.replace('&nbsp;',' ') # hack to bypass how Python handles unicode
@@ -51,31 +93,22 @@ def get_token(text):
 			token=n['name']
 	return token
 
-def tee_times_parse(text):
+
+def search_tee_time(text, day):
 	text = text.replace('&nbsp;',' ') # hack to bypass how Python handles unicode
 	html = BeautifulSoup(text,'html.parser')
-	table = html.body.find('table')
-	# print table
-	# print table
-	for t in table:
-		print t
-		print "\n\n @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ \n\n"
-	# tr = table.findAll('tr')[2:]
-	# records = {}
-	# for row in tr:
-	# 	cells = row.findAll('td')
-	# 	record = parse_entry(cells)
+	# daysOfMonth = html.body.findAll("th", {"class" : "otherMonth"})
+	daysContent = html.table.findAll("td", {"class" : "calendarDay"})
+	# print "This is the index that we want:", day
+	listOfUrls=[]
+	counter=0
+	for d in daysContent:
+		if d.text.find("Tee Times") > -1 and counter is day:
+			listOfUrls.append(d.find("a")['href'].strip())
+		counter+=1
+		if counter is 7:
+			counter=0
+	return listOfUrls
 
-	# 	if record is None:
-	# 		continue
-	# 	elif record['subject'] is None: #This is notes, or additional days. I don't care about it right now
-	# 		continue
-			
-	# 	record['_code'] = record['subject'] + "-" + record['course'] + "-" + record['section']
-
-	# 	determine_state(record)
-
-	# 	records[record['_code']] = record
-	
-	# print table
-
+def get_text(elem):
+	return elem.get_text().strip()

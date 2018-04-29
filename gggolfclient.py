@@ -5,57 +5,70 @@
 """Secure GG Golf Command-Line Interface
 
 Usage:
-  gggolfclient.py res -d DAY
+  gggolfclient.py res -d=DAY -c=COURSE... [-a=HOUR -s]
   gggolfclient.py test
   gggolfclient.py (-h | --help)
   gggolfclient.py (-v | --version)
 
 
 Commands:
-  res             Reserve golf course
-  test            Testing new function
+  res                 Reserve golf course
+  test                Testing new function
+
+Arguments:
+  DAY
+  HOUR
+  COURSE              W/B, W/R, R/9, B/9, G/B, 12 holes
 
 Options:
-  -h --help       Show this screen.
-  -v --version    Show version.
-  -n --name=NAME  Golf Course location name.
-  -d --day=DAY    Day of the week.
+  -h --help           Show this screen.
+  -v --version        Show version.
+  -n --name=NAME      Golf Course location name.
+  -d --day=DAY        Specify a day of the week.
+  -a --after=HOUR     Specify an hour in 24h format
+  -c --course=COURSE  Specify the type of course
+  -s --silent
 
 """
 from docopt import docopt
 from gggolf_common import *
-import credentials_info
+import credentials_info, sys
 
-days=["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
+days={"Sunday":0, "Monday": 1, "Tuesday": 2, "Wednesday" : 3, "Thursday" : 4, "Friday": 5, "Saturday" : 6}
+
 
 def main(docopt_args):
     
-    # # set variables
-    # if docopt_args["setup"]:
-    #   location_name=docopt_args["--name"]
-
-    #   if location_name not in locations :
-    #     print "This is not a valid location..."
-    #   else:
-    #     init("https://secure.gggolf.ca/"+location_name+"/index.php?")
-    #     print "The setup is DONE! The location you have selected is: "+location_name
-    #     print base_url+"\n"
+    # Hide Stacktrace if silent flag present
+    if docopt_args["--silent"]:
+        sys.tracebacklimit=0
 
     # Reservation
     if docopt_args["res"]:        
-        res_day=docopt_args["--day"]
+        course_list=docopt_args["--course"]
         # Get arguments
-        if res_day not in days:
+        after_time="8"
+        if docopt_args["--after"]:
+          if int(docopt_args["--after"])<24 and int(docopt_args["--after"])>0:
+            after_time=docopt_args["--after"]
+          else:
+            raise Exception('Invalid Time!')
+
+        
+        reservation_day=docopt_args["--day"]
+        if reservation_day not in days:
           print "This is not a valid day..."
         else:
-          print "You have chosen to reserve on "+res_day
-          reserve_course(res_day)
+          print "Reserving for "+reservation_day+" after "+after_time+"h ..."
+          print "For courses:", course_list, "\n"
+          # reserve_course(reservation_day)
+          test_func(reservation_day, course_list, after_time)
         # elif docopt_args["--greatflag"]:
         #     print "   with --greatflag\n"
         # else:
         #     print "Not a valid command"
-    elif docopt_args["test"]:
-        test_func()
+    # elif docopt_args["test"]:
+    #     test_func()
     # For 1 or more repeating arguments with ./gggolfclient <repeating>...
     # elif docopt_args["<repeating>"]:
     #     print "You have used the repeating args:"
@@ -67,9 +80,11 @@ def reserve_course(day):
 
 
 
-def test_func():
+def test_func(day, course_list, after):
   index=gggolf_login()
-  tee_times_parse(index.text)
+  url_list=search_tee_time(index.text, days[day])
+  for url in url_list:
+    search_available_slots(get_url_action(url), course_list, after)
 
 
 
