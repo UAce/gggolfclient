@@ -16,18 +16,17 @@ Commands:
   test                Testing new function
 
 Arguments:
-  DAY
-  HOUR
+  DAY                 e.g. Monday
+  HOUR                e.g. 15
   COURSE              W/B, W/R, R/9, B/9, G/B, 12 holes
 
 Options:
   -h --help           Show this screen.
   -v --version        Show version.
-  -n --name=NAME      Golf Course location name.
   -d --day=DAY        Specify a day of the week.
   -a --after=HOUR     Specify an hour in 24h format
   -c --course=COURSE  Specify the type of course
-  -s --silent
+  -s --silent         Hides stacktrace
 
 """
 from docopt import docopt
