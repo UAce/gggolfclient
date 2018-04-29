@@ -14,9 +14,6 @@ referer = ""
 s = requests.Session()
 
 def gggolf_get(func):
-	# if verbose:
-	# 	sys.stderr.write("? " + func + "\n")
-
 	global referer
 	url =  credentials_info.base_url + func
 	r = s.get(url,cookies = cookie_data, headers={'Referer': referer})
@@ -24,9 +21,6 @@ def gggolf_get(func):
 	return r
 
 def gggolf_post(func, req):
-	# if verbose:
-	# 	sys.stderr.write("> " + func + "\n")
-
 	global referer
 	url = credentials_info.base_url + func
 	r = s.post(url,data = req,cookies = cookie_data,headers = {'Referer': referer})
@@ -55,24 +49,24 @@ def search_available_slots(func, course_list, atime):
 
 	# Get column number for Player 1 and for Course
 	for th in html.table.select("tr.autogridHeader")[0].find_all("th"):
-		if th.get_text().strip()=="Player 1":
+		if get_text(th)=="Player 1":
 			playerColNo=int(th['data-colno'])
-		if th.get_text().strip()=="Course":
+		if get_text(th)=="Course":
 			courseColNo=int(th['data-colno'])
 
 	available_time_urls=[]
 	for tr in tr_all:
 		# print tr
 		tr_list=tr.find_all("td")
-		# Skip tee time if unavailable
-		if tr_list[playerColNo].get_text().strip() == "Unavailable" or tr_list[courseColNo].get_text().strip() not in course_list:	
+		# Skip tee time if unavailable or not wanted course
+		if get_text(tr_list[playerColNo]) == "Unavailable" or get_text(tr_list[courseColNo]) not in course_list:	
 			continue
 
-		tmp=tr_list[1].get_text().strip()
+		tmp=get_text(tr_list[1])
 		tr_time=datetime.strptime(tmp, '%H:%M').time()
 
 		if tr_time >= after_time:
-			print tr_time, ":", tr_list[2].get_text().strip(), "is available" 
+			print tr_time, ":", get_text(tr_list[2]), "is available" 
 			available_time_urls.append(tr_list[0].find("a")['href'].strip())
 	if len(available_time_urls) is 0:
 		raise Exception("There are no available courses...")
