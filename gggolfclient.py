@@ -5,8 +5,8 @@
 """Secure GG Golf Command-Line Interface
 
 Usage:
-  gggolfclient.py res -d DAY -c COURSE... [-a=HOUR -s]
-  gggolfclient.py find -d DAY -c COURSE... [-a=HOUR -s]
+  gggolfclient.py res -d DAY -c COURSE... [-a=HOUR -i]
+  gggolfclient.py find -d DAY -c COURSE... [-a=HOUR -i]
   gggolfclient.py quick_res -D DATE -t TIME -c COURSE
   gggolfclient.py (-h | --help)
   gggolfclient.py (-v | --version)
@@ -26,7 +26,7 @@ Arguments:
 Options:
   -h --help           Show this screen.
   -v --version        Show version.
-  -s --silent         Hides stacktrace.
+  -i --info           Show stacktrace.
   -d --day=DAY        Specify a day of the week.
   -t --time=TIME      Specify time of the day in 24h format.
   -a --after=HOUR     Specify an hour in 24h format.
@@ -42,8 +42,9 @@ def main(docopt_args):
     print "_______________________________________________________________\n"
 
     # Hide Stacktrace if silent flag present
-    if docopt_args["--silent"]:
-        sys.tracebacklimit=0
+    sys.tracebacklimit=0
+    if docopt_args["--info"]:
+        sys.tracebacklimit=1
 
     if docopt_args["quick_res"]:
       print "Quick Reservation for..."
@@ -53,9 +54,9 @@ def main(docopt_args):
     if docopt_args["res"]:
         reservation_urls=exec_find(get_argument(docopt_args), 0)
         for elem in reservation_urls:
-          print "Reserving "+elem[0]
+          print "\nReserving "+elem[0]+"\n"
           # print get_url_action(elem[1])
-          # exec_reservation(get_url_action(elem[1]))
+          exec_reservation(get_url_action(elem[1]))
     elif docopt_args["find"]:
         exec_find(get_argument(docopt_args), 1)
 
@@ -82,17 +83,18 @@ def exec_find(args, show):
   reservation_urls=[]
 
   for date in available_tee_times:
-    if show:
-      print "\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
-      print "@   Available Tee Times for "+date+":   @"
-      print "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n"
     tee_time_url=get_url_action(available_tee_times[date])
     reservation_urls.append(parse_tee_time(tee_time_url, args["course_list"], args["after_time"], date, show))
   return reservation_urls
 
 
 def exec_reservation(url):
-  pass
+  r=gggolf_get(url)
+  # print r.text
+  user_id=get_user_id(r.text)  
+  res=gggolf_post(url, {'foursome0_player0_player': user_id, 'foursome0_player1_player': "guest", 'foursome0_player1_player': 'guest', 'foursome0_player3_player': 'guest', 'SaveTeeTime': 'Save'})
+  is_reservation_success(res.text)
+
 
 def exec_quick_reservation(url):
   pass
