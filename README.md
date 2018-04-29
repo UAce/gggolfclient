@@ -1,34 +1,40 @@
 gggolfclient is a command-line interface for GGGolf.
 
-### Usage
 ___
-Make a reservation for the first available time slot
+### Usage
+
+**Make a reservation for the first available time slot**
 > gggolfclient.py res -d DAY -c COURSE... [-a=HOUR -s]
 
 
-Find available time slots
+**Find available time slots**
 > gggolfclient.py find -d DAY -c COURSE... [-a=HOUR -s]
 
 
-Make a quick reservation for a specific date and time
+**Make a quick reservation for a specific date and time**
 > gggolfclient.py quick_res -D DATE -t TIME -c COURSE
 
 
-More usages
+**More usages**
 > gggolfclient.py (-h | --help)
 > gggolfclient.py (-v | --version)
 
+___
 
 ### Commands:
 >  res                 Reserve the first available time slot for wanted golf courses
 >  quick_res           Reserve the specified time slot for wanted golf courses
 >  find                Find Available Time slots for wanted golf courses
 
+___
+
 ### Arguments:
 >  DAY                 e.g. Monday
 >  HOUR                e.g. 15
 >  COURSE              W/B, W/R, R/9, B/9, G/B, 12 holes
 >  TIME                e.g. 15:04
+
+___
 
 ### Options:
 >  -h --help           Show this screen.
