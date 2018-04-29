@@ -4,11 +4,11 @@ ___
 ## Usage
 
 **Make a reservation for the first available time slot**
-> gggolfclient.py res -d DAY -c COURSE... [-a=HOUR -s]
+> gggolfclient.py res -d DAY -c COURSE... [-a HOUR -i]
 
 
 **Find available time slots**
-> gggolfclient.py find -d DAY -c COURSE... [-a=HOUR -s]
+> gggolfclient.py find -d DAY -c COURSE... [-a HOUR -i]
 
 
 **Make a quick reservation for a specific date and time**
@@ -47,7 +47,7 @@ ___
 
 >  -v --version        Show version.
 
->  -s --silent         Hides stacktrace.
+>  -i --info           Show stacktrace.
 
 >  -d --day=DAY        Specify a day of the week.
 

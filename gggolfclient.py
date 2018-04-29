@@ -5,8 +5,8 @@
 """Secure GG Golf Command-Line Interface
 
 Usage:
-  gggolfclient.py res -d DAY -c COURSE... [-a=HOUR -i]
-  gggolfclient.py find -d DAY -c COURSE... [-a=HOUR -i]
+  gggolfclient.py res -d DAY -c COURSE... [-a HOUR -i]
+  gggolfclient.py find -d DAY -c COURSE... [-a HOUR -i]
   gggolfclient.py quick_res -D DATE -t TIME -c COURSE
   gggolfclient.py (-h | --help)
   gggolfclient.py (-v | --version)
@@ -55,8 +55,8 @@ def main(docopt_args):
         reservation_urls=exec_find(get_argument(docopt_args), 0)
         for elem in reservation_urls:
           print "\nReserving "+elem[0]+"\n"
-          # print get_url_action(elem[1])
           exec_reservation(get_url_action(elem[1]))
+          
     elif docopt_args["find"]:
         exec_find(get_argument(docopt_args), 1)
 
@@ -94,7 +94,6 @@ def exec_reservation(url):
   user_id=get_user_id(r.text)  
   res=gggolf_post(url, {'foursome0_player0_player': user_id, 'foursome0_player1_player': "guest", 'foursome0_player1_player': 'guest', 'foursome0_player3_player': 'guest', 'SaveTeeTime': 'Save'})
   is_reservation_success(res.text)
-
 
 def exec_quick_reservation(url):
   pass

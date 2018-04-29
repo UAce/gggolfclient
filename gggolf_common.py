@@ -144,7 +144,7 @@ def parse_tee_time(tee_time_url, course_list, atime, date, show):
 			message=get_text(tr_list[2])+" course on "+date+" at "+tr_time.strftime("%H:%M")
 			if show:
 				print tr_time, ":", get_text(tr_list[2])
-				print tr_list[0].find("a")['href'].strip()
+				# print tr_list[0].find("a")['href'].strip()
 			if isFirst:
 				# Get the url of the first time slot
 				first_time_slot_url=(message,tr_list[0].find("a")['href'].strip())
@@ -186,3 +186,6 @@ def is_reservation_success(text):
 			message+=get_text(span)+" "
 		# print message
 		raise Exception("Your reservation was not successful...\n"+message)
+	else:
+		print "\033[1;32m**** Congratulations, your reservation was successful!! ****\033[1m"
+		sys.exit(0)
