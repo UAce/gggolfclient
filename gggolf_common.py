@@ -7,6 +7,7 @@ import credentials_info
 import requests,sys
 import datetime
 from datetime import datetime, time
+from collections import OrderedDict
 from bs4 import BeautifulSoup
 
 cookie_data = {}
@@ -35,8 +36,9 @@ def gggolf_login():
 	r2=gggolf_post("index.php?option=com_users&task=user.login&lang=en",{'username': credentials_info.username, 'password': credentials_info.password, 'option': 'com_users', 'task': 'user.login', 'return': 'aHR0cHM6Ly9zZWN1cmUuZ2dnb2xmLmNhL2NlcmYvaW5kZXgucGhwP29wdGlvbj1jb21fZ2dtZW1iZXImcmVxPWluZGV4Jmxhbmc9ZW4mbXNncz1Q', token : '1'})
 	return r2
 
-def search_available_slots(func, course_list, atime):
-	r=gggolf_get(func)
+# Parse a Tee Time url and return all available time slots for that Tee Time
+def parse_tee_time(tee_time_url, course_list, atime, show):
+	r=gggolf_get(tee_time_url)
 	text = r.text.replace('&nbsp;',' ') # hack to bypass how Python handles unicode
 	html = BeautifulSoup(text,'html.parser')
 
@@ -65,9 +67,10 @@ def search_available_slots(func, course_list, atime):
 		
 		tmp=get_text(tr_list[1])
 		tr_time=datetime.strptime(tmp, '%H:%M').time()
-
-		if tr_time >= after_time:
-			print tr_time, ":", get_text(tr_list[2]), "is available" 
+		isBookable=tr_list[0].find("a")
+		if tr_time >= after_time and isBookable is not None:
+			if show:
+				print tr_time, ":", get_text(tr_list[2]), "is available" 
 			available_time_urls.append(tr_list[0].find("a")['href'].strip())
 	if len(available_time_urls) is 0:
 		raise Exception("There are no available courses...")
@@ -88,22 +91,25 @@ def get_token(text):
 			token=n['name']
 	return token
 
-
-def search_tee_time(text, day):
+# Find the dates with Tee Time for wanted day of the week
+def search_tee_time_dates(text, day):
 	text = text.replace('&nbsp;',' ') # hack to bypass how Python handles unicode
 	html = BeautifulSoup(text,'html.parser')
-	# daysOfMonth = html.body.findAll("th", {"class" : "otherMonth"})
+	daysOfMonth = html.body.findAll("th", {"class" : "otherMonth"})
 	daysContent = html.table.findAll("td", {"class" : "calendarDay"})
 	# print "This is the index that we want:", day
-	listOfUrls=[]
+	listOfDates=[]
 	counter=0
 	for d in daysContent:
-		if d.text.find("Tee Times") > -1 and counter is day:
-			listOfUrls.append(d.find("a")['href'].strip())
+		if d.text.find("Tee Times") > -1 and (counter%7) is day:
+			date=daysOfMonth[counter].get_text().strip(	)
+			urlValue=d.find("a")['href'].strip()
+			listOfDates.append((date,urlValue))
 		counter+=1
-		if counter is 7:
-			counter=0
-	return listOfUrls
+
+	# Return a dictionary with the Dates as keys in order of insertion (chronological order)
+	# e.g. OrderedDict([(u'Apr 29', u'https://secure.gggolf.ca/cerf/index.php?option=com_ggmember&req=autogrid&lang=en&p0=Transaction&v0=FindTeeTimes&p1=Res&v1=D&p2=RequestDate&v2=20180429'), (u'May 06', u'https://secure.gggolf.ca/cerf/index.php?option=com_ggmember&req=autogrid&lang=en&p0=Transaction&v0=FindTeeTimes&p1=Res&v1=D&p2=RequestDate&v2=20180506')])
+	return OrderedDict(listOfDates)
 
 def get_text(elem):
 	return elem.get_text().strip()

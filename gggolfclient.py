@@ -5,15 +5,14 @@
 """Secure GG Golf Command-Line Interface
 
 Usage:
-  gggolfclient.py res -d=DAY -c=COURSE... [-a=HOUR -s]
-  gggolfclient.py test
+  gggolfclient.py <command> -d=DAY -c=COURSE... [-a=HOUR -s]
   gggolfclient.py (-h | --help)
   gggolfclient.py (-v | --version)
 
 
 Commands:
-  res                 Reserve golf course
-  test                Testing new function
+  res                 Reserve the first available time slot for wanted golf courses
+  find                Find Available Time slots for wanted golf courses
 
 Arguments:
   DAY                 e.g. Monday
@@ -33,35 +32,40 @@ from docopt import docopt
 from gggolf_common import *
 import credentials_info, sys
 
-days={"Sunday":0, "Monday": 1, "Tuesday": 2, "Wednesday" : 3, "Thursday" : 4, "Friday": 5, "Saturday" : 6}
+list_of_days=OrderedDict([("Sunday", 0), ("Monday", 1), ("Tuesday", 2), ("Wednesday", 3), ("Thursday", 4), ("Friday", 5), ("Saturday", 6)])
 
 
 def main(docopt_args):
-    
+    # Get command
+    command=docopt_args["<command>"]
+    after_time="8"
+
     # Hide Stacktrace if silent flag present
     if docopt_args["--silent"]:
         sys.tracebacklimit=0
 
     # Reservation
-    if docopt_args["res"]:        
+    if command:
         course_list=docopt_args["--course"]
-        # Get arguments
-        after_time="8"
+        
         if docopt_args["--after"]:
           if int(docopt_args["--after"])<24 and int(docopt_args["--after"])>0:
             after_time=docopt_args["--after"]
           else:
             raise Exception('Invalid Time!')
 
-        
         reservation_day=docopt_args["--day"]
-        if reservation_day not in days:
-          print "This is not a valid day..."
-        else:
-          print "Reserving for "+reservation_day+" after "+after_time+"h ..."
-          print "For courses:", course_list, "\n"
-          # reserve_course(reservation_day)
-          test_func(reservation_day, course_list, after_time)
+        message=reservation_day+" after "+after_time+"h..."
+        if reservation_day not in list_of_days:
+          raise Exception('Invalid Day!! Please Choose one of the following days:\n- '+ "\n- ".join(list_of_days))
+        elif command == "res":
+          print "Reserving the first available slot for "+message
+          print "The golf courses you chose:", course_list, "\n"
+          search_available_times(reservation_day, course_list, after_time, 0)
+        elif command == "find":
+          print "Finding available slots for "+message
+          print "The golf courses you chose:", course_list, "\n"
+          search_available_times(reservation_day, course_list, after_time, 1)
         # elif docopt_args["--greatflag"]:
         #     print "   with --greatflag\n"
         # else:
@@ -79,11 +83,21 @@ def reserve_course(day):
 
 
 
-def test_func(day, course_list, after):
-  index=gggolf_login()
-  url_list=search_tee_time(index.text, days[day])
-  for url in url_list:
-    search_available_slots(get_url_action(url), course_list, after)
+def search_available_times(day, course_list, after, show_available_times):
+  main_html=gggolf_login()
+  
+  # e.g. OrderedDict([(u'Apr 29', u'https://secure.gggolf.ca/cerf/index.php?option=com_ggmember&req=autogrid&lang=en&p0=Transaction&v0=FindTeeTimes&p1=Res&v1=D&p2=RequestDate&v2=20180429'), (u'May 06', u'https://secure.gggolf.ca/cerf/index.php?option=com_ggmember&req=autogrid&lang=en&p0=Transaction&v0=FindTeeTimes&p1=Res&v1=D&p2=RequestDate&v2=20180506')])
+  available_tee_times=search_tee_time_dates(main_html.text, list_of_days[day])
+  # print available_tee_times
+  for date in available_tee_times:
+    if show_available_times: 
+      print "Available Tee Times for "+date+": "
+    tee_time_url=get_url_action(available_tee_times[date])
+    available_url=parse_tee_time(tee_time_url, course_list, after, show_available_times)
+    print "\n\n"
+    for url in available_url:
+      print url
+    print "\n___________________________________________________\n"
 
 
 
