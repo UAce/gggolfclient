@@ -5,67 +5,60 @@
 """Secure GG Golf Command-Line Interface
 
 Usage:
-  gggolfclient.py <command> -d=DAY -c=COURSE... [-a=HOUR -s]
+  gggolfclient.py res -d DAY -c COURSE... [-a=HOUR -s]
+  gggolfclient.py find -d DAY -c COURSE... [-a=HOUR -s]
+  gggolfclient.py quick_res -D DATE -t TIME -c COURSE
   gggolfclient.py (-h | --help)
   gggolfclient.py (-v | --version)
 
 
 Commands:
   res                 Reserve the first available time slot for wanted golf courses
+  quick_res           Reserve the specified time slot for wanted golf courses
   find                Find Available Time slots for wanted golf courses
 
 Arguments:
   DAY                 e.g. Monday
   HOUR                e.g. 15
   COURSE              W/B, W/R, R/9, B/9, G/B, 12 holes
+  TIME                e.g. 15:04
 
 Options:
   -h --help           Show this screen.
   -v --version        Show version.
+  -s --silent         Hides stacktrace.
   -d --day=DAY        Specify a day of the week.
-  -a --after=HOUR     Specify an hour in 24h format
-  -c --course=COURSE  Specify the type of course
-  -s --silent         Hides stacktrace
+  -t --time=TIME      Specify time of the day in 24h format.
+  -a --after=HOUR     Specify an hour in 24h format.
+  -c --course=COURSE  Specify the type of course.
+  -D --Date=DATE      Specify a date e.g. Apr 29.
 
 """
 from docopt import docopt
 from gggolf_common import *
 import credentials_info, sys
 
-list_of_days=OrderedDict([("Sunday", 0), ("Monday", 1), ("Tuesday", 2), ("Wednesday", 3), ("Thursday", 4), ("Friday", 5), ("Saturday", 6)])
-
-
 def main(docopt_args):
-    # Get command
-    command=docopt_args["<command>"]
-    after_time="8"
+    print "_______________________________________________________________\n"
 
     # Hide Stacktrace if silent flag present
     if docopt_args["--silent"]:
         sys.tracebacklimit=0
 
-    # Reservation
-    if command:
-        course_list=docopt_args["--course"]
-        
-        if docopt_args["--after"]:
-          if int(docopt_args["--after"])<24 and int(docopt_args["--after"])>0:
-            after_time=docopt_args["--after"]
-          else:
-            raise Exception('Invalid Time!')
+    if docopt_args["quick_res"]:
+      print "Quick Reservation for..."
+      exec_quick_reservation(get_quick_argument(docopt_args))
 
-        reservation_day=docopt_args["--day"]
-        message=reservation_day+" after "+after_time+"h..."
-        if reservation_day not in list_of_days:
-          raise Exception('Invalid Day!! Please Choose one of the following days:\n- '+ "\n- ".join(list_of_days))
-        elif command == "res":
-          print "Reserving the first available slot for "+message
-          print "The golf courses you chose:", course_list, "\n"
-          search_available_times(reservation_day, course_list, after_time, 0)
-        elif command == "find":
-          print "Finding available slots for "+message
-          print "The golf courses you chose:", course_list, "\n"
-          search_available_times(reservation_day, course_list, after_time, 1)
+    # Reservation
+    if docopt_args["res"]:
+        reservation_urls=exec_find(get_argument(docopt_args), 0)
+        for elem in reservation_urls:
+          print "Reserving "+elem[0]
+          # print get_url_action(elem[1])
+          # exec_reservation(get_url_action(elem[1]))
+    elif docopt_args["find"]:
+        exec_find(get_argument(docopt_args), 1)
+
         # elif docopt_args["--greatflag"]:
         #     print "   with --greatflag\n"
         # else:
@@ -78,27 +71,31 @@ def main(docopt_args):
     #     print '   ' + '   '.join(docopt_args["<repeating>"]) + ' '
 
 
-def reserve_course(day):
-  gggolf_login()
+def exec_find(args, show):
+  show_available_times=None
+  print "Finding available slots",args["message"],"for the following courses:\n-","\n- ".join(args["course_list"])
 
-
-
-def search_available_times(day, course_list, after, show_available_times):
   main_html=gggolf_login()
   
   # e.g. OrderedDict([(u'Apr 29', u'https://secure.gggolf.ca/cerf/index.php?option=com_ggmember&req=autogrid&lang=en&p0=Transaction&v0=FindTeeTimes&p1=Res&v1=D&p2=RequestDate&v2=20180429'), (u'May 06', u'https://secure.gggolf.ca/cerf/index.php?option=com_ggmember&req=autogrid&lang=en&p0=Transaction&v0=FindTeeTimes&p1=Res&v1=D&p2=RequestDate&v2=20180506')])
-  available_tee_times=search_tee_time_dates(main_html.text, list_of_days[day])
-  # print available_tee_times
-  for date in available_tee_times:
-    if show_available_times: 
-      print "Available Tee Times for "+date+": "
-    tee_time_url=get_url_action(available_tee_times[date])
-    available_url=parse_tee_time(tee_time_url, course_list, after, show_available_times)
-    print "\n\n"
-    for url in available_url:
-      print url
-    print "\n___________________________________________________\n"
+  available_tee_times=search_tee_time_dates(main_html.text, list_of_days[args["reservation_day"]])
+  reservation_urls=[]
 
+  for date in available_tee_times:
+    if show:
+      print "\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+      print "@   Available Tee Times for "+date+":   @"
+      print "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n"
+    tee_time_url=get_url_action(available_tee_times[date])
+    reservation_urls.append(parse_tee_time(tee_time_url, args["course_list"], args["after_time"], date, show))
+  return reservation_urls
+
+
+def exec_reservation(url):
+  pass
+
+def exec_quick_reservation(url):
+  pass
 
 
 # START OF SCRIPT
