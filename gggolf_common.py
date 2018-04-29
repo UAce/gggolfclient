@@ -58,10 +58,11 @@ def search_available_slots(func, course_list, atime):
 	for tr in tr_all:
 		# print tr
 		tr_list=tr.find_all("td")
-		# Skip tee time if unavailable or not wanted course
-		if get_text(tr_list[playerColNo]) == "Unavailable" or get_text(tr_list[courseColNo]) not in course_list:	
-			continue
 
+		# Skip tee time if unavailable or not wanted course
+		if get_text(tr_list[playerColNo]) == "Unavailable" or get_text(tr_list[playerColNo]) != "" or get_text(tr_list[courseColNo]) not in course_list:	
+			continue
+		
 		tmp=get_text(tr_list[1])
 		tr_time=datetime.strptime(tmp, '%H:%M').time()
 
