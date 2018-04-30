@@ -1,4 +1,4 @@
-class InputError(Exception):
+class InvalidInput(Exception):
     """Exception raised for errors in the input.
 
     Attributes:

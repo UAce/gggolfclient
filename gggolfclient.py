@@ -39,7 +39,7 @@ from gggolf_common import *
 import credentials_info, sys
 
 def main(docopt_args):
-    print "_______________________________________________________________\n"
+    print_long_line()
 
     # Hide Stacktrace if silent flag present
     sys.tracebacklimit=0
@@ -58,7 +58,7 @@ def main(docopt_args):
           exec_reservation(get_url_action(elem[1]))
           
     elif docopt_args["find"]:
-        exec_find(get_argument(docopt_args), 1)
+        ulist=exec_find(get_argument(docopt_args), 1)
 
         # elif docopt_args["--greatflag"]:
         #     print "   with --greatflag\n"
@@ -74,7 +74,7 @@ def main(docopt_args):
 
 def exec_find(args, show):
   show_available_times=None
-  print "Finding available slots",args["message"],"for the following courses:\n-","\n- ".join(args["course_list"])
+  print "Finding available slots",args["message"],"for the following courses:\n-","\n- ".join(args["course_list"]),"\n"
 
   main_html=gggolf_login()
   
@@ -84,8 +84,16 @@ def exec_find(args, show):
 
   for date in available_tee_times:
     tee_time_url=get_url_action(available_tee_times[date])
-    reservation_urls.append(parse_tee_time(tee_time_url, args["course_list"], args["after_time"], date, show))
-  return reservation_urls
+    val=parse_tee_time(tee_time_url, args["course_list"], args["after_time"], date, show)
+    # Don't append value if None
+    if val:
+      reservation_urls.append(val)
+
+  # If list is empty, it means that there were no available time slots
+  if len(reservation_urls) is 0:
+    raise NoResultException("No availability for "+", ".join(course_list)+" courses... Please try with another golf course or another day of the week")
+  else:
+    return reservation_urls
 
 
 def exec_reservation(url):

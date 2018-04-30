@@ -39,6 +39,11 @@ def gggolf_login():
 	return res
 
 
+def remove_duplicate(alist):
+	aset=set([elem for elem in alist if alist.count(elem) > 0])
+	return list(aset)
+
+
 def get_url_action(url):
 	return url.replace("https://secure.gggolf.ca/cerf/", "")	
 
@@ -58,7 +63,7 @@ def get_text(elem):
 
 
 def get_argument(docopt_args):
-  course_list=docopt_args["--course"]
+  course_list=remove_duplicate(docopt_args["--course"])
   reservation_day=docopt_args["--day"]
   after_time="8"
 
@@ -71,12 +76,12 @@ def get_argument(docopt_args):
     if int(docopt_args["--after"])<24 and int(docopt_args["--after"])>0:
       after_time=docopt_args["--after"]
     else:
-      raise InputError('Invalid Time!')
+      raise InvalidInput('Invalid Time!')
   message=reservation_day+" after "+after_time+"h"
   
   # Check if reservation day is valid
   if reservation_day not in list_of_days:
-    raise InputError(reservation_day+' is not a valid day!! Please Choose one of the following days:\n- '+ "\n- ".join(list_of_days))
+    raise InvalidInput(reservation_day+' is not a valid day!! Please Choose one of the following days:\n- '+ "\n- ".join(list_of_days))
 
   return {"course_list":course_list, "reservation_day":reservation_day, "after_time":after_time, "message":message}
 
@@ -92,7 +97,7 @@ def search_tee_time_dates(text, day):
 	counter=0
 	for d in daysContent:
 		if d.text.find("Tee Times") > -1 and (counter%7) is day:
-			date=daysOfMonth[counter].get_text().strip(	)
+			date=daysOfMonth[counter].get_text().strip()
 			urlValue=d.find("a")['href'].strip()
 			listOfDates.append((date,urlValue))
 		counter+=1
@@ -149,12 +154,15 @@ def parse_tee_time(tee_time_url, course_list, atime, date, show):
 				# Get the url of the first time slot
 				first_time_slot_url=(message,tr_list[0].find("a")['href'].strip())
 				isFirst=False
-	if show:
-		print "\n________________________________________"
+	
 	if first_time_slot_url is None:
-		print "\n"
-		raise NoResultException("No available time slot found for "+", ".join(course_list)+" courses...")
+		print "There are no available tee times for "+date+"..."
+		print_short_line()
+		return
+		# raise NoResultException("No available time slot found for "+", ".join(course_list)+" courses...")
 	else:
+		if show:
+			print_short_line()
 		return first_time_slot_url
 
 def get_user_id(text):
@@ -174,7 +182,7 @@ def is_valid_course(course):
 	# if not any(course in elem for elem in list_of_courses):
 	if course not in list_of_courses:
 		# raise Exception(course+" is not a valid course!! Please Choose from the following courses:\n- "+ "\n- ".join(list_of_courses))
-		raise InputError(course+" is not a valid course! Please Choose from the following courses:\n- "+ "\n- ".join(list_of_courses))
+		raise InvalidInput(course+" is not a valid course! Please Choose from the following courses:\n- "+ "\n- ".join(list_of_courses))
 
 def is_reservation_success(text):
 	text = text.replace('&nbsp;',' ') # hack to bypass how Python handles unicode
@@ -185,7 +193,13 @@ def is_reservation_success(text):
 		for span in spans:
 			message+=get_text(span)+" "
 		# print message
-		raise Exception("Your reservation was not successful...\n"+message)
+		raise Exception("Your reservation was not successful...\nError Message: "+message)
 	else:
 		print "\033[1;32m**** Congratulations, your reservation was successful!! ****\033[1m"
 		sys.exit(0)
+
+def print_long_line():
+	print "_____________________________________________________________________\n"
+
+def print_short_line():
+	print "\n_________________________________________________"
