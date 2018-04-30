@@ -20,7 +20,7 @@ Commands:
 Arguments:
   DAY                 e.g. Monday
   HOUR                e.g. 15
-  COURSE              W/B, W/R, R/9, B/9, G/B, 12 holes
+  COURSE              W/B, W/R, R/9 (9), B/9 (9), G/B, 12 holes
   TIME                e.g. 15:04
 
 Options:

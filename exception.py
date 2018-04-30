@@ -1,3 +1,8 @@
+# exception.py: Custom exceptions
+#!/usr/bin/env python
+# 
+# (C) Copyright 2018-2019 Yu-Yueh Liu
+
 class InvalidInput(Exception):
     """Exception raised for errors in the input.
 

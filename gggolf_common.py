@@ -17,6 +17,10 @@ s = requests.Session()
 list_of_days=OrderedDict([("Sunday", 0), ("Monday", 1), ("Tuesday", 2), ("Wednesday", 3), ("Thursday", 4), ("Friday", 5), ("Saturday", 6)])
 list_of_courses=["W/B", "W/R", "R/9 (9)", "B/9 (9)", "G/B", "12 holes"]
 
+
+##########################################
+#                 QUERIES                #
+##########################################
 def gggolf_get(func):
 	global referer
 	url =  credentials_info.base_url + func
@@ -39,52 +43,10 @@ def gggolf_login():
 	return res
 
 
-def remove_duplicate(alist):
-	aset=set([elem for elem in alist if alist.count(elem) > 0])
-	return list(aset)
 
-
-def get_url_action(url):
-	return url.replace("https://secure.gggolf.ca/cerf/", "")	
-
-
-def get_token(text):
-	text = text.replace('&nbsp;',' ') # hack to bypass how Python handles unicode
-	soup = BeautifulSoup(text,'html.parser')
-	token=""
-	for n in soup.findAll('input'):
-		if n['type']=="hidden" and n['value']=="1":
-			token=n['name']
-	return token
-
-
-def get_text(elem):
-	return elem.get_text().strip()
-
-
-def get_argument(docopt_args):
-  course_list=remove_duplicate(docopt_args["--course"])
-  reservation_day=docopt_args["--day"]
-  after_time="8"
-
-  # Check if the courses are valid
-  for course in course_list:
-	is_valid_course(course)
-
-  # Check if the after time is valid
-  if docopt_args["--after"]:
-    if int(docopt_args["--after"])<24 and int(docopt_args["--after"])>0:
-      after_time=docopt_args["--after"]
-    else:
-      raise InvalidInput('Invalid Time!')
-  message=reservation_day+" after "+after_time+"h"
-  
-  # Check if reservation day is valid
-  if reservation_day not in list_of_days:
-    raise InvalidInput(reservation_day+' is not a valid day!! Please Choose one of the following days:\n- '+ "\n- ".join(list_of_days))
-
-  return {"course_list":course_list, "reservation_day":reservation_day, "after_time":after_time, "message":message}
-
+##########################################
+#             SEARCH & PARSE             #
+##########################################
 
 # Find the dates with Tee Time for wanted day of the week
 def search_tee_time_dates(text, day):
@@ -106,30 +68,26 @@ def search_tee_time_dates(text, day):
 	# e.g. OrderedDict([(u'Apr 29', u'https://secure.gggolf.ca/cerf/index.php?option=com_ggmember&req=autogrid&lang=en&p0=Transaction&v0=FindTeeTimes&p1=Res&v1=D&p2=RequestDate&v2=20180429'), (u'May 06', u'https://secure.gggolf.ca/cerf/index.php?option=com_ggmember&req=autogrid&lang=en&p0=Transaction&v0=FindTeeTimes&p1=Res&v1=D&p2=RequestDate&v2=20180506')])
 	return OrderedDict(listOfDates)
 
+
 	
 # Parse a Tee Time url and return url of first available time slots for that Tee Time
 def parse_tee_time(tee_time_url, course_list, atime, date, show):
 	r=gggolf_get(tee_time_url)
 	text = r.text.replace('&nbsp;',' ') # hack to bypass how Python handles unicode
 	html = BeautifulSoup(text,'html.parser')
-
-	# Remove Table headers and keep the table body
-	tr_all=html.table.find_all("tr")[5:]
-	
 	playerColNo=None
 	courseColNo=None
 	after_time=datetime.strptime(atime+":00", '%H:%M').time()
-
+	# Remove Table headers and keep the table body
+	tr_all=html.table.find_all("tr")[5:]
 	# Get column number for Player 1 and for Course
 	for th in html.table.select("tr.autogridHeader")[0].find_all("th"):
 		if get_text(th)=="Player 1":
 			playerColNo=int(th['data-colno'])
 		if get_text(th)=="Course":
 			courseColNo=int(th['data-colno'])
-
 	first_time_slot_url=None
 	isFirst=True
-
 	if show:
 		print "\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
 		print "@   Available Tee Times for "+date+":   @"
@@ -141,7 +99,6 @@ def parse_tee_time(tee_time_url, course_list, atime, date, show):
 		# Skip tee time if unavailable or not wanted course
 		if get_text(tr_list[playerColNo]) == "Unavailable" or (get_text(tr_list[playerColNo]) != "" and get_text(tr_list[playerColNo]) != "(9 holes only)") or get_text(tr_list[courseColNo]) not in course_list:
 			continue
-
 		tmp=get_text(tr_list[1])
 		tr_time=datetime.strptime(tmp, '%H:%M').time()
 		isBookable=tr_list[0].find("a")
@@ -154,7 +111,6 @@ def parse_tee_time(tee_time_url, course_list, atime, date, show):
 				# Get the url of the first time slot
 				first_time_slot_url=(message,tr_list[0].find("a")['href'].strip())
 				isFirst=False
-	
 	if first_time_slot_url is None:
 		print "There are no available tee times for "+date+"..."
 		print_short_line()
@@ -165,18 +121,12 @@ def parse_tee_time(tee_time_url, course_list, atime, date, show):
 			print_short_line()
 		return first_time_slot_url
 
-def get_user_id(text):
-	text = text.replace('&nbsp;',' ') # hack to bypass how Python handles unicode
-	html = BeautifulSoup(text,'html.parser')
-	js_script=html.head.findAll("script", {"type" : "text/javascript"}, src=False)[0]
-	fav=re.search(r'\"favorites\":\[s*([^].]+|\S+)', js_script.text).group(1).split("},")
-	for f in fav:
-		# print f.replace("}","")+"}"
-		tmp=ast.literal_eval(f.replace("}","")+"}")
-		if credentials_info.name1 in tmp['name']:
-			return tmp['key']
-	raise Exception("You are not a valid user... Please verify your name in credentials_info.py")
 
+
+
+##########################################
+#                VALIDATION              #
+##########################################
 
 def is_valid_course(course):
 	# if not any(course in elem for elem in list_of_courses):
@@ -197,6 +147,73 @@ def is_reservation_success(text):
 	else:
 		print "\033[1;32m**** Congratulations, your reservation was successful!! ****\033[1m"
 		sys.exit(0)
+
+
+
+
+##########################################
+#                 GETTERS                #
+##########################################
+
+def get_user_id(text):
+	text = text.replace('&nbsp;',' ') # hack to bypass how Python handles unicode
+	html = BeautifulSoup(text,'html.parser')
+	js_script=html.head.findAll("script", {"type" : "text/javascript"}, src=False)[0]
+	fav=re.search(r'\"favorites\":\[s*([^].]+|\S+)', js_script.text).group(1).split("},")
+	for f in fav:
+		# print f.replace("}","")+"}"
+		tmp=ast.literal_eval(f.replace("}","")+"}")
+		if credentials_info.name1 in tmp['name']:
+			return tmp['key']
+	raise Exception("You are not a valid user... Please verify your name in credentials_info.py")
+
+
+def get_token(text):
+	text = text.replace('&nbsp;',' ') # hack to bypass how Python handles unicode
+	soup = BeautifulSoup(text,'html.parser')
+	token=""
+	for n in soup.findAll('input'):
+		if n['type']=="hidden" and n['value']=="1":
+			token=n['name']
+	return token
+
+
+def get_argument(docopt_args):
+  course_list=remove_duplicate(docopt_args["--course"])
+  reservation_day=docopt_args["--day"]
+  after_time="8"
+  # Check if the courses are valid
+  for course in course_list:
+	is_valid_course(course)
+  # Check if the after time is valid
+  if docopt_args["--after"]:
+    if int(docopt_args["--after"])<24 and int(docopt_args["--after"])>0:
+      after_time=docopt_args["--after"]
+    else:
+      raise InvalidInput('Invalid Time!')
+  message=reservation_day+" after "+after_time+"h"
+  # Check if reservation day is valid
+  if reservation_day not in list_of_days:
+    raise InvalidInput(reservation_day+' is not a valid day!! Please Choose one of the following days:\n- '+ "\n- ".join(list_of_days))
+  return {"course_list":course_list, "reservation_day":reservation_day, "after_time":after_time, "message":message}
+
+
+def get_url_action(url):
+	return url.replace("https://secure.gggolf.ca/cerf/", "")	
+
+
+def get_text(elem):
+	return elem.get_text().strip()
+
+
+
+##########################################
+#          OTHER USEFUL FUNCTIONS        #
+##########################################
+
+def remove_duplicate(alist):
+	aset=set([elem for elem in alist if alist.count(elem) > 0])
+	return list(aset)
 
 def print_long_line():
 	print "_____________________________________________________________________\n"
