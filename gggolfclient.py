@@ -100,7 +100,8 @@ def exec_find(args, show):
 def exec_reservation(url):
   r=gggolf_get(url)
   user_id=get_user_id(r.text)  
-  res=gggolf_post(url, {'foursome0_player0_player': user_id, 'foursome0_player1_player': "guest", 'foursome0_player1_player': 'guest', 'foursome0_player3_player': 'guest', 'SaveTeeTime': 'Save'})
+  # This would fail for nb_of_pl less than 4 e.g. for 3 players, only foursome0_player3_player is available
+  res=gggolf_post(url, {'foursome0_player0_player': user_id, 'foursome0_player1_player': "guest", 'foursome0_player2_player': 'guest', 'foursome0_player3_player': 'guest', 'SaveTeeTime': 'Save'})
   is_reservation_success(res.text)
 
 
