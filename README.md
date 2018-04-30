@@ -48,7 +48,7 @@ ___
 <pre>
 -h --help           	Show this screen.
 
--v --version       		Show version.
+-v --version        	Show version.
 
 -i --info           	Show stacktrace.
 
