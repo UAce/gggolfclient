@@ -65,9 +65,10 @@ def main(docopt_args):
     # Reservation
     elif docopt_args["res"]:
       message_and_reservation_urls=exec_find(get_arguments(docopt_args), 0)
-      for elem in message_and_reservation_urls:
-        print "\nReserving "+elem[0]+"\n"
-        exec_reservation(elem[1])
+      if message_and_reservation_urls:
+        for elem in message_and_reservation_urls:
+          print "\nReserving "+elem[0]+"\n"
+          exec_reservation(elem[1])
           
     elif docopt_args["find"]:
       ulist=exec_find(get_arguments(docopt_args), 1)
@@ -90,7 +91,7 @@ def exec_find(args, show):
   # e.g. OrderedDict([(u'Apr 29', u'https://secure.gggolf.ca/cerf/index.php?option=com_ggmember&req=autogrid&lang=en&p0=Transaction&v0=FindTeeTimes&p1=Res&v1=D&p2=RequestDate&v2=20180429'), (u'May 06', u'https://secure.gggolf.ca/cerf/index.php?option=com_ggmember&req=autogrid&lang=en&p0=Transaction&v0=FindTeeTimes&p1=Res&v1=D&p2=RequestDate&v2=20180506')])
   available_tee_times=search_tee_time_dates(main_html.text, list_of_days.index(args["reservation_day"]))
   reservation_urls=[]
-
+  
   for date in available_tee_times:
     tee_time_url=get_url_action(available_tee_times[date])
     r=gggolf_get(tee_time_url)
@@ -102,7 +103,7 @@ def exec_find(args, show):
 
   # If list is empty, it means that there were no available time slots
   if len(reservation_urls) == 0:
-    sys.stdout.write("No availability for "+", ".join(args["course_list"])+" courses... \nPlease try with another golf course or another day of the week")
+    sys.stderr.write("No availability for "+", ".join(args["course_list"])+" courses... \nPlease try with another golf course or another day of the week")
   else:
     return reservation_urls
 
