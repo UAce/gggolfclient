@@ -8,6 +8,7 @@ Usage:
   gggolfclient.py res -d DAY -c COURSE... -n NUMBER [-a HOUR -i]
   gggolfclient.py find -d DAY -c COURSE... -n NUMBER [-a HOUR -i]
   gggolfclient.py advance_res -M MONTH -D DATE -t TIME -c COURSE [-i]
+  gggolfclient.py configure
   gggolfclient.py (-h | --help)
   gggolfclient.py (-v | --version)
 
