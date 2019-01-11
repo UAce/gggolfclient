@@ -11,13 +11,12 @@ import getpass, sys, os, re
 
 def set_creds():
     configure=True
-    exists = os.path.isfile('./credentials_info.py')
-    username=""
-    password=""
-    location=""
-    name=""
-    if exists:
-        with open('./credentials_info.py', 'r+') as f:
+    
+    while configure:
+        exists = os.path.isfile('./credentials_info.py')
+        username=password=location=name=userHolder=passHolder=locHolder=nameHolder=""
+        if exists:
+            f = open('./credentials_info.py', 'r+')
             for line in f:
                 val=re.findall(r"['\"](.*?)['\"]", line.rstrip())     
                 if len(val)==0:
@@ -26,29 +25,40 @@ def set_creds():
                     val=val[0]
 
                 if line.startswith('location'):
-                    location=" ["+val+"]"
+                    location=val
+                    locHolder=" ["+val+"]"
                     continue
                 if line.startswith('name'):
-                    name=" ["+val+"]"
+                    name=val
+                    nameHolder=" ["+val+"]"
                     continue
             
                 stars=printstars(val)
                 if line.startswith('username'):
-                    username=" ["+stars+val[-2:]+"]"
+                    username=val
+                    userHolder=" ["+stars+val[-2:]+"]"
                     continue
                 if line.startswith('password'):
-                    password=" ["+stars+val[-2:]+"]"
-                    continue                
-    else:
-        file = open('./credentials_info.py', 'w+')
+                    password=val
+                    passHolder=" ["+stars+val[-2:]+"]"
+                    continue 
+            f.close()               
+            f = open('./credentials_info.py', 'w')
+        else:
+            f = open('./credentials_info.py', 'w+')
 
-    while configure:
-        username = raw_input("Enter your memberId"+username+": ") or username
-        password = getpass.getpass("Enter your password"+password+": ") or password
-        location = raw_input("Enter a golf course location"+location+": ") or location
-        name = raw_input("Enter your displayed name on gggolf"+name+": ") or name
-        # write_creds(username, password, location, name)
-        configure=query_yes_no("Would you like to reset your credentials?")
+        username = raw_input("Enter your memberId"+userHolder+": ") or username
+        password = getpass.getpass("Enter your password"+passHolder+": ") or password
+        location = raw_input("Enter a golf course location"+locHolder+": ") or location
+        name = raw_input("Enter your displayed name on gggolf"+nameHolder+": ") or name
+        f.write("# These are your credentials to log on to secure GGGolf\n\n")
+        f.write("username"+" = '"+username+"'\n")
+        f.write("password"+" = '"+password+"'\n")
+        f.write("location"+" = '"+location+"'\n")
+        f.write("name"+" = '"+name+"'\n")
+        f.write("base_url"+" = 'https://secure.gggolf.ca/"+location+"/'\n")
+        f.close()
+        configure=query_yes_no("Would you like to re-enter your credentials?")
         sys.stdout.write("\n\n")
     sys.stdout.write("Your Credentials are set! You are ready to use gggolfclient now.\n\n")
 
