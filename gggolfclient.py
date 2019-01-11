@@ -16,6 +16,7 @@ Commands:
   res                 Reserve the first available time slot for wanted golf courses
   advance_res         Reserve the specified time slot for wanted golf courses
   find                Find Available Time slots for wanted golf courses
+  configure           Configure credentials and variables
 
 
 Arguments:
@@ -43,7 +44,8 @@ Options:
 """
 from docopt import docopt
 from gggolf_common import *
-import credentials_info, sys
+from configure import *
+import sys
 
 def main(docopt_args):
     print_long_line()
@@ -60,7 +62,7 @@ def main(docopt_args):
 
 
     # Reservation
-    if docopt_args["res"]:
+    elif docopt_args["res"]:
         message_and_reservation_urls=exec_find(get_arguments(docopt_args), 0)
         for elem in message_and_reservation_urls:
           print "\nReserving "+elem[0]+"\n"
@@ -68,6 +70,10 @@ def main(docopt_args):
           
     elif docopt_args["find"]:
         ulist=exec_find(get_arguments(docopt_args), 1)
+
+    elif docopt_args["configure"]:
+      print("Configuring credentials and variables...\n")
+      set_creds()
 
 
 
