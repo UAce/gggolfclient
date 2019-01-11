@@ -5,10 +5,10 @@
 """Secure GGGolf Command-Line Interface
 
 Usage:
-  gggolfclient.py res -d DAY -c COURSE... -n NUMBER [-a HOUR -i]
-  gggolfclient.py find -d DAY -c COURSE... -n NUMBER [-a HOUR -i]
+  gggolfclient.py res -d DAY -c COURSE... -n NUMBER [-a HOUR] [-i]
+  gggolfclient.py find -d DAY -c COURSE... -n NUMBER [-a HOUR] [-i]
   gggolfclient.py advance_res -M MONTH -D DATE -t TIME -c COURSE [-i]
-  gggolfclient.py configure
+  gggolfclient.py configure [-i]
   gggolfclient.py (-h | --help)
   gggolfclient.py (-v | --version)
 
@@ -64,17 +64,20 @@ def main(docopt_args):
 
     # Reservation
     elif docopt_args["res"]:
-        message_and_reservation_urls=exec_find(get_arguments(docopt_args), 0)
-        for elem in message_and_reservation_urls:
-          print "\nReserving "+elem[0]+"\n"
-          exec_reservation(elem[1])
+      message_and_reservation_urls=exec_find(get_arguments(docopt_args), 0)
+      for elem in message_and_reservation_urls:
+        print "\nReserving "+elem[0]+"\n"
+        exec_reservation(elem[1])
           
     elif docopt_args["find"]:
-        ulist=exec_find(get_arguments(docopt_args), 1)
+      ulist=exec_find(get_arguments(docopt_args), 1)
 
     elif docopt_args["configure"]:
       print("Configuring credentials and variables...\n")
-      set_creds()
+      try:
+        set_creds()
+      except:
+        raise
 
 
 
@@ -98,8 +101,8 @@ def exec_find(args, show):
       reservation_urls.append(val)
 
   # If list is empty, it means that there were no available time slots
-  if len(reservation_urls) is 0:
-    raise NoResultException("No availability for "+", ".join(args["course_list"])+" courses... \nPlease try with another golf course or another day of the week")
+  if len(reservation_urls) == 0:
+    sys.stdout.write("No availability for "+", ".join(args["course_list"])+" courses... \nPlease try with another golf course or another day of the week")
   else:
     return reservation_urls
 
