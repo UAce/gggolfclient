@@ -78,5 +78,6 @@ ___
 
 ### Examples:
 <pre>
-python gggolfclient.py find -d Wednesday -c W/R -n 4 -a 14
+python gggolfclient.py find -d Wednesday -c W/R -n 4 -a 
+python gggolfclient.py res -d Monday -c G/B -n 2
 </pre>
