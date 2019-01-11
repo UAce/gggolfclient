@@ -15,6 +15,9 @@ ___
 <pre>gggolfclient.py advance_res -M MONTH -D DATE -t TIME -c COURSE [-i]</pre>
 
 
+**Configure GGGolf credentials and location name**
+<pre>gggolfclient.py configure</pre>
+
 **More usages**
 <pre>
 gggolfclient.py (-h | --help)
@@ -27,6 +30,7 @@ ___
 res                 Reserve the first available time slot for wanted golf courses
 advance_res         Reserve the specified time slot for wanted golf courses
 find                Find Available Time slots for wanted golf courses
+configure           Configure credentials and location name
 </pre>
 
 ___
