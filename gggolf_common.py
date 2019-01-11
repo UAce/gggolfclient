@@ -220,7 +220,7 @@ def get_user_id(text):
 	for f in fav:
 		# print f.replace("}","")+"}"
 		tmp=ast.literal_eval(f.replace("}","")+"}")
-		if credentials_info.name1 in tmp['name']:
+		if credentials_info.name in tmp['name']:
 			return tmp['key']
 	raise Exception("You are not a valid user... Please verify your name in credentials_info.py")
 
