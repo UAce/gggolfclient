@@ -2,7 +2,7 @@
 # The command-line interface for secure GGGolf
 # (C) Copyright 2018-2019 Yu-Yueh Liu
 
-"""Secure GG Golf Command-Line Interface
+"""Secure GGGolf Command-Line Interface
 
 Usage:
   gggolfclient.py res -d DAY -c COURSE... -n NUMBER [-a HOUR -i]
@@ -92,7 +92,7 @@ def exec_find(args, show):
 
   # If list is empty, it means that there were no available time slots
   if len(reservation_urls) is 0:
-    raise NoResultException("No availability for "+", ".join(course_list)+" courses... Please try with another golf course or another day of the week")
+    raise NoResultException("No availability for "+", ".join(args["course_list"])+" courses... \nPlease try with another golf course or another day of the week")
   else:
     return reservation_urls
 
