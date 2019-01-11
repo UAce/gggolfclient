@@ -4,11 +4,11 @@ ___
 ## Usage
 
 **Make a reservation for the first available time slot for specified day of the week, number of people and course**
-<pre>gggolfclient.py res -d DAY -c COURSE... -n NUMBER [-a HOUR -i]</pre>
+<pre>gggolfclient.py res -d DAY -c COURSE... -n NUMBER [-a HOUR] [-i]</pre>
 
 
 **Find and display available time slots for specified day of the week, number of people and course**
-<pre>gggolfclient.py find -d DAY -c COURSE... -n NUMBER [-a HOUR -i]</pre>
+<pre>gggolfclient.py find -d DAY -c COURSE... -n NUMBER [-a HOUR] [-i]</pre>
 
 
 **Make an advanced reservation for a specific date, time and course**
@@ -16,7 +16,7 @@ ___
 
 
 **Configure GGGolf credentials and location name**
-<pre>gggolfclient.py configure</pre>
+<pre>gggolfclient.py configure [-i]</pre>
 
 **More usages**
 <pre>
@@ -75,3 +75,8 @@ ___
 -n --number=NUMBER  	Specify number of people (Max 4 ppl).
 </pre>
 
+
+### Examples:
+<pre>
+python gggolfclient.py find -d Wednesday -c W/R -n 4 -a 14
+</pre>
