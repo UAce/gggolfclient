@@ -1,6 +1,16 @@
 gggolfclient is a command-line interface for GGGolf.
 
 ___
+## Setup
+
+Clone the repository and run install script to install the tool and dependencies.
+<pre>
+git clone https://github.com/UAce/gggolfclient.git
+cd gggolfclient
+./install.sh
+</pre>
+
+___
 ## Usage
 
 **Make a reservation for the first available time slot for specified day of the week, number of people and course**
@@ -78,6 +88,6 @@ ___
 
 ### Examples:
 <pre>
-python gggolfclient.py find -d Wednesday -c W/R -n 4 -a 
+python gggolfclient.py find -d Wednesday -c W/R -n 4
 python gggolfclient.py res -d Monday -c G/B -n 2
 </pre>
