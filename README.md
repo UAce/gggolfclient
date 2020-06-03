@@ -1,7 +1,7 @@
 gggolfclient is a command-line interface for GGGolf.
 
 ___
-## Setup
+## Installation & Setup
 
 Clone the repository and run install script to install the tool and dependencies.
 <pre>
