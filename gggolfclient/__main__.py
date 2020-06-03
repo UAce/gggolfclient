@@ -43,12 +43,14 @@ Options:
   -n --number=NUMBER  Specify number of player (Max 4).
 
 """
-from docopt import docopt
-from gggolf_common import *
-from configure import *
 import sys
+from docopt import docopt
 
-def main(docopt_args):
+from .gggolf_common import *
+from .configure import *
+
+def main():
+    docopt_args = docopt(__doc__, version='gggolfclient 0.1.0')
     print_long_line()
 
     # Hide Stacktrace if silent flag present
@@ -58,7 +60,7 @@ def main(docopt_args):
 
     if docopt_args["advance_res"]:
       message_and_reservation_url=exec_advance_find(get_advance_arguments(docopt_args))
-      print "Reserving "+message_and_reservation_url[0]+"...\n"
+      print("Reserving "+message_and_reservation_url[0]+"...\n")
       exec_reservation(message_and_reservation_url[1])
 
 
@@ -67,7 +69,7 @@ def main(docopt_args):
       message_and_reservation_urls=exec_find(get_arguments(docopt_args), 0)
       if message_and_reservation_urls:
         for elem in message_and_reservation_urls:
-          print "\nReserving "+elem[0]+"\n"
+          print("\nReserving "+elem[0]+"\n")
           exec_reservation(elem[1])
           
     elif docopt_args["find"]:
@@ -84,7 +86,7 @@ def main(docopt_args):
 
 def exec_find(args, show):
   show_available_times=None
-  print "Finding available Tee Times",args["message"],"for the following courses:\n-","\n- ".join(args["course_list"]),"\n"
+  print("Finding available Tee Times",args["message"],"for the following courses:\n-","\n- ".join(args["course_list"]),"\n")
 
   main_html=gggolf_login()
   
@@ -117,7 +119,7 @@ def exec_reservation(url):
 
 
 def exec_advance_find(args):
-  # print "Finding "+args['message']+"...\n"
+  # print("Finding "+args['message']+"...\n")
 
   main_html=gggolf_login()
 
@@ -130,6 +132,5 @@ def exec_advance_find(args):
 
 # START OF SCRIPT
 if __name__ == '__main__':
-    args = docopt(__doc__, version='gggolfclient 1.0')
     # print(args)
-    main(args)
+    main()

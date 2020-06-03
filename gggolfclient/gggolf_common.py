@@ -3,13 +3,13 @@
 # 
 # (C) Copyright 2018-2019 Yu-Yueh Liu
 
-import credentials_info
 import requests, sys, datetime, re, ast
 from datetime import datetime, time
 from collections import OrderedDict
-from exception import *
 from bs4 import BeautifulSoup
 
+from .exception import *
+from .credentials_info import *
 
 cookie_data = {}
 referer = ""
@@ -27,7 +27,7 @@ list_of_months=["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "
 # HTTP GET request
 def gggolf_get(func):
 	global referer
-	url =  credentials_info.base_url + func
+	url =  base_url + func
 	r = s.get(url,cookies = cookie_data, headers={'Referer': referer})
 	referer = url
 	return r
@@ -35,7 +35,7 @@ def gggolf_get(func):
 # HTTP POST request
 def gggolf_post(func, req):
 	global referer
-	url = credentials_info.base_url + func
+	url = base_url + func
 	res = s.post(url,data = req,cookies = cookie_data,headers = {'Referer': referer})
 	referer = url
 	return res
@@ -44,8 +44,8 @@ def gggolf_post(func, req):
 def gggolf_login():
 	r=gggolf_get("index.php?option=com_ggmember&req=login&lang=en")
 	token=get_token(r.text)
-	# print "SECURITY TOKEN: "+token+"\n"
-	res=gggolf_post("index.php?option=com_users&task=user.login&lang=en",{'username': credentials_info.username, 'password': credentials_info.password, 'option': 'com_users', 'task': 'user.login', 'return': 'aHR0cHM6Ly9zZWN1cmUuZ2dnb2xmLmNhL2NlcmYvaW5kZXgucGhwP29wdGlvbj1jb21fZ2dtZW1iZXImcmVxPWluZGV4Jmxhbmc9ZW4mbXNncz1Q', token : '1'})
+	# print("SECURITY TOKEN: "+token+"\n")
+	res=gggolf_post("index.php?option=com_users&task=user.login&lang=en",{'username': username, 'password': password, 'option': 'com_users', 'task': 'user.login', 'return': 'aHR0cHM6Ly9zZWN1cmUuZ2dnb2xmLmNhL2NlcmYvaW5kZXgucGhwP29wdGlvbj1jb21fZ2dtZW1iZXImcmVxPWluZGV4Jmxhbmc9ZW4mbXNncz1Q', token : '1'})
 	return res
 
 
@@ -62,7 +62,7 @@ def search_tee_time_dates(text, day):
 	html = BeautifulSoup(text,'html.parser')
 	daysOfMonth = html.body.findAll("th", {"class" : "otherMonth"})
 	daysContent = html.table.findAll("td", {"class" : "calendarDay"})
-	# print "This is the index that we want:", day
+	# print("This is the index that we want:", day)
 	listOfDates=[]
 	counter=0
 	for d in daysContent:
@@ -94,10 +94,10 @@ def parse_tee_time(text, course_list, atime, date, nb_of_pl, show):
 	first_time_slot_url=None
 	isFirst=True
 	if show:
-		print "\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
-		print "@   Available Tee Times for "+date+":   @"
-		print "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
-		print "Number of player: "+str(nb_of_pl)+"\n"
+		print("\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+		print("@   Available Tee Times for "+date+":   @")
+		print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+		print("Number of player: "+str(nb_of_pl)+"\n")
 
 	for tr in tr_all:
 		tr_list=tr.find_all("td")
@@ -112,14 +112,14 @@ def parse_tee_time(text, course_list, atime, date, nb_of_pl, show):
 		if tr_time >= after_time and isBookable is not None:
 			message=get_text(tr_list[2])+" course on "+date+" at "+tr_time.strftime("%H:%M")
 			if show:
-				print tr_time.__format__("%H:%M"), ":", get_text(tr_list[2])
-				# print tr_list[0].find("a")['href'].strip()
+				print(tr_time.__format__("%H:%M"), ":", get_text(tr_list[2]))
+				# print(tr_list[0].find("a")['href'].strip())
 			if isFirst:
 				# Get the url of the first time slot
 				first_time_slot_url=(message, get_url_action(tr_list[0].find("a")['href'].strip()))
 				isFirst=False
 	if first_time_slot_url is None:
-		print "There are no available tee times for "+date+"..."
+		print("There are no available tee times for "+date+"...")
 		print_short_line()
 		return
 		# raise NoResultException("No available time slot found for "+", ".join(course_list)+" courses...")
@@ -139,7 +139,7 @@ def search_tee_time_date_advance(text, date):
 	for d in daysOfMonth:
 		if d.text.find(date) > -1:
 			urlValue=daysContent[counter].find("a")['href'].strip()
-			# print urlValue
+			# print(urlValue)
 			return get_url_action(urlValue)
 		counter+=1
 
@@ -191,10 +191,10 @@ def is_reservation_success(text):
 		message=""
 		for span in spans:
 			message+=get_text(span)+" "
-		# print message
+		# print(message)
 		raise Exception("Your reservation was not successful...\nError Message: "+message)
 	else:
-		print "\033[1;32m**** Congratulations, your reservation was successful!! ****\033[1m"
+		print("\033[1;32m**** Congratulations, your reservation was successful!! ****\033[1m")
 		sys.exit(0)
 
 
@@ -203,8 +203,6 @@ def is_valid_nb_of_player(nb, tr_list, player_column):
 	for i in range(3,3-nb,-1):
 		result=result and (get_text(tr_list[player_column+i]) == "" or get_text(tr_list[player_column+i]) == "(9 holes only)")
 	return result
-
-
 
 
 ##########################################
@@ -218,11 +216,11 @@ def get_user_id(text):
 	js_script=html.head.findAll("script", {"type" : "text/javascript"}, src=False)[0]
 	fav=re.search(r'\"favorites\":\[s*([^].]+|\S+)', js_script.text).group(1).split("},")
 	for f in fav:
-		# print f.replace("}","")+"}"
+		# print(f.replace("}","")+"}")
 		tmp=ast.literal_eval(f.replace("}","")+"}")
-		if credentials_info.name in tmp['name']:
+		if name in tmp['name']:
 			return tmp['key']
-	raise Exception("You are not a valid user... Please verify your name in credentials_info.py")
+	raise Exception("You are not a valid user... Please verify your name in py")
 
 
 def get_token(text):
@@ -236,32 +234,31 @@ def get_token(text):
 
 
 def get_arguments(docopt_args):
-  course_list=remove_duplicate(docopt_args["--course"])
-  reservation_day=docopt_args["--day"]
-  nb_of_pl=int(docopt_args["--number"])
-  after_time="8"
+	course_list=remove_duplicate(docopt_args["--course"])
+	reservation_day=docopt_args["--day"]
+	nb_of_pl=int(docopt_args["--number"])
+	after_time="8"
 
-  # Check if the courses are valid
-  for course in course_list:
-	is_valid(course, list_of_courses)
+	# Check if the courses are valid
+	for course in course_list:
+		is_valid(course, list_of_courses)
 
-  # Check if the after time is valid
-  if docopt_args["--after"]:
-    if int(docopt_args["--after"])<24 and int(docopt_args["--after"])>=0:
-      after_time=docopt_args["--after"]
-    else:
-      raise InvalidInput('Invalid Time!')
+	# Check if the after time is valid
+	if docopt_args["--after"]:
+		if int(docopt_args["--after"])<24 and int(docopt_args["--after"])>=0:
+			after_time=docopt_args["--after"]
+		else:
+			raise InvalidInput('Invalid Time!')
 
-  if nb_of_pl<=0 or nb_of_pl>4:
-  	raise InvalidInput('You must be at least 1 player and at most 4 players!!!')
+	if nb_of_pl<=0 or nb_of_pl>4:
+		raise InvalidInput('You must be at least 1 player and at most 4 players!!!')
 
-  message=reservation_day+" after "+after_time+"h for "+str(nb_of_pl)+" player(s)"
+	message=reservation_day+" after "+after_time+"h for "+str(nb_of_pl)+" player(s)"
 
-  # Check if reservation day is valid
-  is_valid(reservation_day, list_of_days)
-  
-  return {"course_list":course_list, "reservation_day":reservation_day, "after_time":after_time, "player": nb_of_pl, "message":message}
+	# Check if reservation day is valid
+	is_valid(reservation_day, list_of_days)
 
+	return {"course_list":course_list, "reservation_day":reservation_day, "after_time":after_time, "player": nb_of_pl, "message":message}
 
 
 def get_advance_arguments(docopt_args):
@@ -305,8 +302,8 @@ def remove_duplicate(alist):
 
 
 def print_long_line():
-	print "_____________________________________________________________________\n"
+	print("_____________________________________________________________________\n")
 
 
 def print_short_line():
-	print "\n_________________________________________________"
+	print("\n_________________________________________________")
